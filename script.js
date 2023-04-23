@@ -196,37 +196,62 @@ const data = {
 const mainNews = data.items.slice(0, 3)
 const smallNews = data.items.slice(3, 12)
 
-const mainNewsTemplate = document.querySelector(".main-news-item")
-const smallNewsTemplate = document.querySelector(".small-news-item")
 const mainNewsContainer = document.querySelector(".articles__big-column")
 const smallNewsContainer = document.querySelector(".articles__small-column")
 
 
-mainNews.forEach((item) => {
+const escapeString = (string) => {
+    const symbols = {
+        "&": "&amp",
+        "<": "&lt",
+        ">": "&gt"
+    }
 
-    const element =  mainNewsTemplate.content.cloneNode(true)
+    return string.replace(/[&<>]/g, tag => symbols[tag] || tag)
+}
+
+function createMainNews(title, description, sourceName, categoryName, image) {
+    return `
+    <article class="main-article">
+        <div class="main-article__image-container">
+            <img class="main-article__image" src="${escapeString(image)}" alt="Фото новости">
+        </div>
+        <div class="main-article__content">
+            <span class="article-category main-article__category">${escapeString(categoryName)}</span>
+            <h2 class="main-article__title">${escapeString(title)}</h2>
+            <p class="main-article__text">${escapeString(description)}</p>
+            <span class="article-source main-article__source">${escapeString(sourceName)}</span>
+        </div>
+    </article>
+    `
+}
+
+function createSmallNews(title, date, sourceName) {
+    return `
+    <article class="small-article">
+        <h2 class="small-article__title">${escapeString(title)}</h2>
+        <p class="small-article__caption">
+            <span class="article-date small-article__date">${escapeString(date)}</span>
+            <span class="article-source small-article__source">${escapeString(sourceName)}</span>
+        </p>
+    </article>
+    `
+}
+
+const mainContent = mainNews.map((item) => {
 
     const source = data.sources.find((it) => it.id === item.source_id)
     const category = data.categories.find((it) => it.id === item.category_id)
 
-    element.querySelector(".main-article__title").textContent = item.title
-    element.querySelector(".main-article__text").textContent = item.description
-    element.querySelector(".main-article__source").textContent = source.name
-    element.querySelector(".main-article__category").textContent = category.name
-    element.querySelector(".main-article__image").src = item.image
-
-    mainNewsContainer.appendChild(element)
-
+    return createMainNews(item.title, item.description, source.name, category.name, item.image)
 })
-smallNews.forEach((item) => {
-    const element = smallNewsTemplate.content.cloneNode(true)
+const smallContent = smallNews.map((item) => {
 
-    const date = new Date(item.date).toLocaleDateString("ru-RU",{month: "long", day: "numeric"})
+    const date = new Date(item.date).toLocaleDateString("ru-RU", {month: "long", day: "numeric"})
     const source = data.sources.find((it) => it.id === item.source_id)
 
-    element.querySelector(".small-article__title").textContent = item.title
-    element.querySelector(".small-article__date").textContent = date
-    element.querySelector(".small-article__source").textContent = source.name
-
-    smallNewsContainer.appendChild(element)
+    return createSmallNews(item.title, date, source.name)
 })
+
+mainNewsContainer.innerHTML = mainContent.join("")
+smallNewsContainer.innerHTML = smallContent.join("")
